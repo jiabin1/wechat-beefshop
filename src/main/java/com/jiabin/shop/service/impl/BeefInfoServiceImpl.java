@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 /**
  * @Author: 加冰
- * @Description:
+ * @Description: Service关注业务逻辑 在这一层屏蔽数据库操作
  * @Date: Created in 2018/3/24 15:48
  */
-@Service //忘了就不知道是个服务层 无法自动注入
+@Service //缺失此标注框架就不知道是个服务层 无法完成自动注入
 public class BeefInfoServiceImpl implements BeefInfoService {
 
     @Autowired

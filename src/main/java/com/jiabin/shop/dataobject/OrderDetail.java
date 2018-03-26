@@ -22,17 +22,17 @@ public class OrderDetail {
 
     private String orderId; //用String类型存储更多的值
 
-    private String productId;
+    private String beefId;
 
-    private String productName;
+    private String beefName;
 
     /*单价*/
-    private BigDecimal productPrice;
+    private BigDecimal beefPrice;
 
     /*数量*/
-    private Integer productQuantity;
+    private Integer beefQuantity;
 
-    private String productIcon;
+    private String beefIcon;
 
 
 }
