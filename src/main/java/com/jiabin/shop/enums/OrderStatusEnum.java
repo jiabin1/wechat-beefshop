@@ -14,11 +14,11 @@ public enum OrderStatusEnum {
     CANCEL(2,"已取消"),
     ;
 
-    private Integer Code;
-    private String Msg;
+    private Integer code;
+    private String msg;
 
     OrderStatusEnum(Integer code, String msg) {
-        Code = code;
-        Msg = msg;
+        this.code = code;
+        this.msg = msg;
     }
 }

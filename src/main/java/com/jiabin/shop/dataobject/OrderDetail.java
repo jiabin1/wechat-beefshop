@@ -20,7 +20,7 @@ public class OrderDetail {
     @Id
     private String detailId;
 
-    private String OrderId; //用String类型存储更多的值
+    private String orderId; //用String类型存储更多的值
 
     private String productId;
 

@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * @Author: 加冰
  * @Description: dto传输层，专门提供数据在各个层之间流通，而不是映射数据库
+ *               关联详情表和主表
  * @Date: Created in 2018/3/26 16:16
  */
 @Data

@@ -14,11 +14,11 @@ public enum PayStatusEnum {
     SUCCESS(0, "成功支付"),
     ;
 
-    private Integer Code;
-    private String Msg;
+    private Integer code;
+    private String msg;
 
     PayStatusEnum(Integer code, String msg) {
-        Code = code;
-        Msg = msg;
+        this.code = code;
+        this.msg = msg;
     }
 }
