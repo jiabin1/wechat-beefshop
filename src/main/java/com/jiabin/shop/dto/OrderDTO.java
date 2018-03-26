@@ -1,8 +1,6 @@
 package com.jiabin.shop.dto;
 
 import com.jiabin.shop.dataobject.OrderDetail;
-import com.jiabin.shop.enums.OrderStatusEnum;
-import com.jiabin.shop.enums.PayStatusEnum;
 import lombok.Data;
 
 import java.math.BigDecimal;
