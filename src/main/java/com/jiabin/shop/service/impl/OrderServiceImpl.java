@@ -59,6 +59,7 @@ public class OrderServiceImpl implements OrderService{
             orderDetail.setOrderId(orderId);//所属订单
             BeanUtils.copyProperties(beefInfo, orderDetail);
 
+
             orderDetailRepository.save(orderDetail);
         }
 
