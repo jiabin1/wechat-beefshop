@@ -1,8 +1,10 @@
 package com.jiabin.shop.service;
 
+
 import com.jiabin.shop.dto.OrderDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
 
 /**
  * @Author: 加冰
@@ -15,10 +17,10 @@ public interface OrderService {
     OrderDTO  create(OrderDTO orderDTO);
 
     /*查询单个订单*/
-    OrderDTO findOne(OrderDTO orderDTO);
+    OrderDTO findOne(String orderId);
 
     /*查询订单列表*/
-    Page<OrderDTO> findAll(OrderDTO orderDTO, Pageable pageable);
+    Page<OrderDTO> findList(String buyerOpenId, Pageable pageable);
 
     /*取消订单*/
     OrderDTO cancel(OrderDTO orderDTO);
@@ -28,4 +30,6 @@ public interface OrderService {
 
     /*支付*/
     OrderDTO paid(OrderDTO orderDTO);
+
+
 }

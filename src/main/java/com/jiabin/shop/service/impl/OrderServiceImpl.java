@@ -1,11 +1,15 @@
 package com.jiabin.shop.service.impl;
 
+import com.jiabin.shop.converter.OrderMasterToOrderDTOConverter;
 import com.jiabin.shop.dataobject.BeefInfo;
 import com.jiabin.shop.dataobject.OrderDetail;
 import com.jiabin.shop.dataobject.OrderMaster;
+import com.jiabin.shop.dto.CartDTO;
 import com.jiabin.shop.dto.OrderDTO;
+import com.jiabin.shop.enums.OrderStatusEnum;
+import com.jiabin.shop.enums.PayStatusEnum;
 import com.jiabin.shop.enums.ResultEnums;
-import com.jiabin.shop.exception.Shopexception;
+import com.jiabin.shop.exception.ShopException;
 import com.jiabin.shop.repository.OrderDetailRepository;
 import com.jiabin.shop.repository.OrderMasterRepository;
 import com.jiabin.shop.service.BeefInfoService;
@@ -14,11 +18,16 @@ import com.jiabin.shop.utills.KeyUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: 加冰
@@ -39,15 +48,17 @@ public class OrderServiceImpl implements OrderService{
 
     /*这个一个消化来自外部的订单并生成系统内部订单的过程*/
     @Override
+    @Transactional //确保抛出异常后会回滚
     public OrderDTO create(OrderDTO orderDTO) {
         String orderId = KeyUtil.generateUniqueKey();//生成唯一订单编号
         BigDecimal orderAmount = new BigDecimal(BigInteger.ZERO);//总价容器 先至零
 
+//AAA        List<CartDTO> cartDTOList = new ArrayList<>();
         /* 1.解析请求的订单（具体购买内容），计算总价格与填入订单具体内容数据库*/
         for(OrderDetail orderDetail: orderDTO.getOrderDetailList()){ //订单具体每一项
             BeefInfo beefInfo = beefInfoService.findOne(orderDetail.getBeefId());//找到对应商品
             if(beefInfo == null){ //先校验是否是有这个商品
-                throw new Shopexception(ResultEnums.PRODUCT_NOT_EXIT);
+                throw new ShopException(ResultEnums.PRODUCT_NOT_EXIT);
             }
 
             /*累加计算价格*/
@@ -59,29 +70,59 @@ public class OrderServiceImpl implements OrderService{
             orderDetail.setOrderId(orderId);//所属订单
             BeanUtils.copyProperties(beefInfo, orderDetail);
 
+//AAA            CartDTO cartDTO = new CartDTO(orderDetail.getBeefId(), orderDetail.getBeefQuantity());
+//AAA            cartDTOList.add(cartDTO);
 
             orderDetailRepository.save(orderDetail);
         }
 
         /*2.写入订单主表*/
         OrderMaster orderMaster = new OrderMaster();
+        BeanUtils.copyProperties(orderDTO, orderMaster);// 先拷贝再设置 不然会被覆盖 null也会被传入
         orderMaster.setOrderId(orderId);
         orderMaster.setOrderAmount(orderAmount);
-        BeanUtils.copyProperties(orderDTO, orderMaster);
+        orderMaster.setOrderStatus(OrderStatusEnum.NEW.getCode());
+        orderMaster.setPayStatus(PayStatusEnum.WAIT.getCode());
+
+        orderMasterRepository.save(orderMaster);
 
         /*扣库存*/
 
-        return null;
+        //AAA等价于
+        List<CartDTO> cartDTOList = orderDTO.getOrderDetailList().stream().map(e ->
+                new CartDTO(e.getBeefId(), e.getBeefQuantity())
+        ).collect(Collectors.toList());
+        beefInfoService.decreaseStock(cartDTOList);
+
+        return orderDTO;
     }
 
     @Override
-    public OrderDTO findOne(OrderDTO orderDTO) {
-        return null;
+    public OrderDTO findOne(String orderId) {
+        OrderMaster orderMaster = orderMasterRepository.findOneByOrderId(orderId);
+        if (orderMaster == null){
+            throw new ShopException(ResultEnums.ORDER_NOT_EXIT);
+        }
+
+        List<OrderDetail> orderDetailList = orderDetailRepository.findByOrderId(orderId);
+        if (CollectionUtils.isEmpty(orderDetailList)){ //list不能为空
+            throw new ShopException(ResultEnums.ORDER_NOT_EXIT);
+        }
+
+        OrderDTO orderDTO = new OrderDTO();
+        BeanUtils.copyProperties(orderMaster, orderDTO);
+        orderDTO.setOrderDetailList(orderDetailList);//!!!!!订单详情设置到数据传输对象上去
+
+        return orderDTO;
     }
 
     @Override
-    public Page<OrderDTO> findAll(OrderDTO orderDTO, Pageable pageable) {
-        return null;
+    public Page<OrderDTO> findList(String buyerOpenId, Pageable pageable) {
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findByBuyerOpenid(buyerOpenId,pageable);
+        List<OrderDTO> orderDTOList = OrderMasterToOrderDTOConverter.convert(orderMasterPage.getContent());
+        Page<OrderDTO> orderDTOPage = new PageImpl<OrderDTO>(orderDTOList, pageable, orderMasterPage.getTotalElements());
+
+        return orderDTOPage;
     }
 
     @Override
@@ -98,4 +139,5 @@ public class OrderServiceImpl implements OrderService{
     public OrderDTO paid(OrderDTO orderDTO) {
         return null;
     }
+
 }
