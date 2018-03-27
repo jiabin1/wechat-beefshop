@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * @Author: 加冰
- * @Description:
+ * @Description: 购物车每一项
  * @Date: Created in 2018/3/26 20:11
  */
 @Data

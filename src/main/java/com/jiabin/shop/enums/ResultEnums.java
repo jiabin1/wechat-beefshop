@@ -9,11 +9,19 @@ import lombok.Getter;
  */
 @Getter
 public enum ResultEnums {
+    PARAM_ERROR(1, "参数不正确"),
 
     PRODUCT_NOT_EXIT(10, "商品不存在"),
     PRODUCT_NOT_ENOUGH(11, "库存不足"),
     ORDER_NOT_EXIT(12, "订单不存在"),
-    ORDERDETAIL_NOT_EXIT(13, "商品详情不存在"),
+    ORDERDETAIL_NOT_EXIT(13, "订单详情不存在"),
+    ORDER_STATUS_ERROR(14, "订单状态错误"),
+    ORDER_UPDATE_FAILED(15, "更新失败"),
+    ORDER_DETAIL_EMPTY(16, "订单详情为空"),
+    ORDER_PAY_STATUS_ERROR(17, "支付状态错误"),
+
+    CART_EMPTY(18, "购物车不能为空"),
+
 
     ;
 

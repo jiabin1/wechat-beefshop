@@ -46,8 +46,19 @@ public class BeefInfoServiceImpl implements BeefInfoService {
     }
 
     @Override
+    @Transactional
     public void increaseStock(List<CartDTO> cartDTOList) {
+        for (CartDTO cartDTO : cartDTOList){
+            //先判断商品是否存在
+            BeefInfo beefInfo = repository.findOneByBeefId(cartDTO.getBeefId());
+            if (beefInfo == null){
+                throw new ShopException(ResultEnums.PRODUCT_NOT_EXIT);
+            }
 
+            Integer result = beefInfo.getBeefStock() + cartDTO.getBeefQuantity();
+            beefInfo.setBeefStock(result);
+            repository.save(beefInfo); //数据库事务都是表中一项为最小粒度单位，不能操作到一项中的具体属性
+        }
     }
 
     @Override

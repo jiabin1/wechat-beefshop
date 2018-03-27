@@ -69,6 +69,7 @@ public class OrderServiceImpl implements OrderService{
             orderDetail.setDetailId(KeyUtil.generateUniqueKey());//生成内部数据项的过程
             orderDetail.setOrderId(orderId);//所属订单
             BeanUtils.copyProperties(beefInfo, orderDetail);
+            orderDetail.setBeefId(beefInfo.getBeefId());
 
 //AAA            CartDTO cartDTO = new CartDTO(orderDetail.getBeefId(), orderDetail.getBeefQuantity());
 //AAA            cartDTOList.add(cartDTO);
@@ -78,16 +79,16 @@ public class OrderServiceImpl implements OrderService{
 
         /*2.写入订单主表*/
         OrderMaster orderMaster = new OrderMaster();
+        orderDTO.setOrderId(orderId); //返回的DTO需要id 若在 1 处只能设置一个master
         BeanUtils.copyProperties(orderDTO, orderMaster);// 先拷贝再设置 不然会被覆盖 null也会被传入
-        orderMaster.setOrderId(orderId);
-        orderMaster.setOrderAmount(orderAmount);
+        //1
+        orderMaster.setOrderAmount(orderAmount); //以下三项 在DTO中都为null
         orderMaster.setOrderStatus(OrderStatusEnum.NEW.getCode());
         orderMaster.setPayStatus(PayStatusEnum.WAIT.getCode());
 
         orderMasterRepository.save(orderMaster);
 
         /*扣库存*/
-
         //AAA等价于
         List<CartDTO> cartDTOList = orderDTO.getOrderDetailList().stream().map(e ->
                 new CartDTO(e.getBeefId(), e.getBeefQuantity())
@@ -126,18 +127,79 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Override
+    @Transactional
     public OrderDTO cancel(OrderDTO orderDTO) {
-        return null;
+        OrderMaster orderMaster = new OrderMaster();//只有订单主表DAO能与数据库交互
+
+        //判断状态
+        if (!orderDTO.getOrderStatus().equals(OrderStatusEnum.NEW.getCode())){
+            throw new ShopException(ResultEnums.ORDER_STATUS_ERROR);
+        }
+        //修改订单状态返回更新后的对象并判断是否成功
+        orderDTO.setOrderStatus(OrderStatusEnum.CANCEL.getCode());
+        BeanUtils.copyProperties(orderDTO, orderMaster); //修改完再拷贝
+        OrderMaster result = orderMasterRepository.save(orderMaster);
+        if (result == null){
+            throw new ShopException(ResultEnums.ORDER_UPDATE_FAILED);
+        }
+
+        //返回库存
+        if (CollectionUtils.isEmpty(orderDTO.getOrderDetailList())){//判断列表是否有商品 即列表是否为空 能让代码更健壮
+            throw new ShopException(ResultEnums.ORDER_DETAIL_EMPTY);
+        }
+        /*抽取商品编号与数量形成购物车这种与业务逻辑相贴合的数据传输对象*/
+        List<CartDTO> cartDTOList = orderDTO.getOrderDetailList().stream()//将订单列表里的具体内容表抽出
+                .map(e -> new CartDTO(e.getBeefId(), e.getBeefQuantity()))//装入购物车每一项
+                .collect(Collectors.toList());//形成表
+        beefInfoService.increaseStock(cartDTOList);
+        //退款
+        if(orderDTO.getOrderStatus().equals(PayStatusEnum.SUCCESS.getCode())){
+            //TODO 支付过程  todo标记能缓存待做事项
+        }
+
+        return orderDTO;
     }
 
     @Override
+    @Transactional
     public OrderDTO finish(OrderDTO orderDTO) {
-        return null;
+        //判断订单状态
+        if (!orderDTO.getOrderStatus().equals(OrderStatusEnum.NEW.getCode())){
+            throw new ShopException(ResultEnums.ORDER_STATUS_ERROR);
+        }
+
+        //修改订单状态
+        orderDTO.setOrderStatus(OrderStatusEnum.FINISH.getCode());
+        OrderMaster orderMaster = new OrderMaster();
+        BeanUtils.copyProperties(orderDTO, orderMaster);
+        OrderMaster updateResult = orderMasterRepository.save(orderMaster); //返回结果
+        if (updateResult == null){
+            throw new ShopException(ResultEnums.ORDER_UPDATE_FAILED);
+        }
+        return orderDTO;
     }
 
     @Override
+    @Transactional
     public OrderDTO paid(OrderDTO orderDTO) {
-        return null;
+        //判断订单
+        if (!orderDTO.getOrderStatus().equals(OrderStatusEnum.NEW.getCode())){
+            throw new ShopException(ResultEnums.ORDER_STATUS_ERROR);
+        }
+        //判断支付
+        if (!orderDTO.getPayStatus().equals(PayStatusEnum.WAIT.getCode())){
+            throw new ShopException(ResultEnums.ORDER_PAY_STATUS_ERROR);
+        }
+
+        //修改
+        orderDTO.setPayStatus(PayStatusEnum.SUCCESS.getCode());
+        OrderMaster orderMaster = new OrderMaster();
+        BeanUtils.copyProperties(orderDTO, orderMaster);
+        OrderMaster updateResult = orderMasterRepository.save(orderMaster); //返回结果
+        if (updateResult == null){
+            throw new ShopException(ResultEnums.ORDER_UPDATE_FAILED);
+        }
+        return orderDTO;
     }
 
 }

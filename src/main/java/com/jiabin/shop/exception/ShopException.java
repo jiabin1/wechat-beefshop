@@ -16,4 +16,9 @@ public class ShopException extends RuntimeException {
 
         this.code = resultEnums.getCode();
     }
+
+    public ShopException(Integer code, String message) {
+        super(message);
+        this.code = code;
+    }
 }

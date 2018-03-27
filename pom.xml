@@ -81,6 +81,13 @@
 			<!--<artifactId>springfox-swagger-ui</artifactId>-->
 		<!--</dependency>-->
 
+
+		<!--将前端数据里内容的String转化为Json-->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
