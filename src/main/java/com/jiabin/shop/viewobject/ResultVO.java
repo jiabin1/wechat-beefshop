@@ -1,5 +1,6 @@
 package com.jiabin.shop.viewobject;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -8,6 +9,7 @@ import lombok.Data;
  * @Date: Created in 2018/3/24 16:12
  */
 @Data //自动生成getset
+@JsonInclude(JsonInclude.Include.NON_NULL)  //有null就不返回
 public class ResultVO<T> {   //data是对象 所以用泛型
 
     /*错误码*/

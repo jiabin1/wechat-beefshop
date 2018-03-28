@@ -121,6 +121,7 @@ public class OrderServiceImpl implements OrderService{
     public Page<OrderDTO> findList(String buyerOpenId, Pageable pageable) {
         Page<OrderMaster> orderMasterPage = orderMasterRepository.findByBuyerOpenid(buyerOpenId,pageable);
         List<OrderDTO> orderDTOList = OrderMasterToOrderDTOConverter.convert(orderMasterPage.getContent());
+        //封装回去page
         Page<OrderDTO> orderDTOPage = new PageImpl<OrderDTO>(orderDTOList, pageable, orderMasterPage.getTotalElements());
 
         return orderDTOPage;
@@ -200,6 +201,15 @@ public class OrderServiceImpl implements OrderService{
             throw new ShopException(ResultEnums.ORDER_UPDATE_FAILED);
         }
         return orderDTO;
+    }
+
+    @Override
+    public Page<OrderDTO> findList(Pageable pageable) {
+        Page<OrderMaster> orderMasterPage = orderMasterRepository.findAll(pageable);
+        List<OrderDTO> orderDTOList = OrderMasterToOrderDTOConverter.convert(orderMasterPage.getContent());
+        Page<OrderDTO> orderDTOPage = new PageImpl<OrderDTO>(orderDTOList, pageable, orderMasterPage.getTotalElements());
+
+        return orderDTOPage;
     }
 
 }
